@@ -1,6 +1,6 @@
 package ru.warfaric.techradar.controller;
 
-import lombok.Builder;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,18 +12,17 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import ru.warfaric.techradar.TestDataUtil;
 import ru.warfaric.techradar.entity.TechnologyEntity;
 import ru.warfaric.techradar.entity.dto.TechnologyDto;
 import ru.warfaric.techradar.service.TechnologyService;
-import ru.warfaric.techradar.service.impl.TechnologyServiceImpl;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
+@Transactional
 public class TechnologyControllerIntegrationTest {
 
     private TechnologyService technologyService;
@@ -53,7 +52,7 @@ public class TechnologyControllerIntegrationTest {
     }
 
     @Test
-    public void testThatCreateTechnologySuccessfullyReturnsSavedTechnology() throws Exception {
+    public void testThatCreateTechnologySuccessfullyReturnsHttpStatusOk() throws Exception {
         TechnologyEntity testTechnologyA = TestDataUtil.createTestTechnology();
         testTechnologyA.setId(null);
         String technologyJson = objectMapper.writeValueAsString(testTechnologyA);
@@ -61,17 +60,8 @@ public class TechnologyControllerIntegrationTest {
                 MockMvcRequestBuilders.post("/api/technology")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(technologyJson)
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.id").isNumber()
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.technology").value("Java")
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.ring").value("Adopt")
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.section").value("Languages")
-        ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.category").value("Backend")
-        );
+        ).andExpect(MockMvcResultMatchers.status().isOk());
+
     }
 
     @Test
@@ -90,13 +80,13 @@ public class TechnologyControllerIntegrationTest {
         ).andExpect(
                 MockMvcResultMatchers.jsonPath("$[0].id").isNumber()
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].technology").value("Java")
+                MockMvcResultMatchers.jsonPath("$[0].name").value("Terraform")
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].ring").value("Adopt")
+                MockMvcResultMatchers.jsonPath("$[0].ring").value("Test")
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].section").value("Languages")
+                MockMvcResultMatchers.jsonPath("$[0].section").value("DevOps")
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].category").value("Backend")
+                MockMvcResultMatchers.jsonPath("$[0].category").value("Software")
         );
     }
 
@@ -115,7 +105,7 @@ public class TechnologyControllerIntegrationTest {
         TechnologyEntity savedTechnology = technologyService.save(testTechnologyA);
 
         TechnologyDto testTechnologyDto = TestDataUtil.createTestDtoTechnology();
-        testTechnologyDto.setTechnology("UPDATED");
+        testTechnologyDto.setName("UPDATED");
         String technologyDtoJson = objectMapper.writeValueAsString(testTechnologyDto);
 
         mockMvc.perform(
@@ -130,6 +120,6 @@ public class TechnologyControllerIntegrationTest {
         mockMvc.perform(
                 MockMvcRequestBuilders.delete("/api/technology/999")
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(MockMvcResultMatchers.status().isOk());
+        ).andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 }

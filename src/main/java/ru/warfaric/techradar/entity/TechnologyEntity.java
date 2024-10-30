@@ -18,7 +18,9 @@ public class TechnologyEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "technology_id_seq")
     private Long id;
 
-    private String technology;
+    private String name;
+
+    private String description;
 
     private String ring;
 
