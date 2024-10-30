@@ -21,6 +21,18 @@ public class TechnologyServiceImpl implements TechnologyService {
 
     @Override
     public TechnologyEntity save(TechnologyEntity technologyEntity) {
+        if (technologyEntity.getName().isEmpty()) {
+            throw new NullPointerException();
+        }
+        if (technologyEntity.getRing().isEmpty()) {
+            throw new NullPointerException();
+        }
+        if (technologyEntity.getSection().isEmpty()) {
+            throw new NullPointerException();
+        }
+        if (technologyEntity.getCategory().isEmpty()) {
+            throw new NullPointerException();
+        }
         return technologyRepository.save(technologyEntity);
     }
 
@@ -47,7 +59,8 @@ public class TechnologyServiceImpl implements TechnologyService {
         technologyEntity.setId(id);
 
         return technologyRepository.findById(id).map(existingTechnology -> {
-            Optional.ofNullable(technologyEntity.getTechnology()).ifPresent(existingTechnology::setTechnology);
+            Optional.ofNullable(technologyEntity.getName()).ifPresent(existingTechnology::setName);
+            Optional.ofNullable(technologyEntity.getDescription()).ifPresent(existingTechnology::setDescription);
             Optional.ofNullable(technologyEntity.getRing()).ifPresent(existingTechnology::setRing);
             Optional.ofNullable(technologyEntity.getSection()).ifPresent(existingTechnology::setSection);
             Optional.ofNullable(technologyEntity.getCategory()).ifPresent(existingTechnology::setCategory);
@@ -57,6 +70,7 @@ public class TechnologyServiceImpl implements TechnologyService {
 
     @Override
     public void delete(Long id) {
+        technologyRepository.findById(id).orElseThrow(() -> new RuntimeException("Technology Not Found"));
         technologyRepository.deleteById(id);
     }
 }

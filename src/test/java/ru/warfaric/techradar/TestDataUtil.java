@@ -12,7 +12,7 @@ public final class TestDataUtil {
     public static TechnologyEntity createTestTechnology(){
         return TechnologyEntity.builder()
                 .id(1L)
-                .technology("Java")
+                .name("Java")
                 .ring("Adopt")
                 .section("Languages")
                 .category("Backend")
@@ -21,7 +21,7 @@ public final class TestDataUtil {
     public static TechnologyDto createTestDtoTechnology(){
         return TechnologyDto.builder()
                 .id(1L)
-                .technology("Java")
+                .name("Java")
                 .ring("Adopt")
                 .section("Languages")
                 .category("Backend")

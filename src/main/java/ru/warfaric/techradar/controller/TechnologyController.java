@@ -2,6 +2,7 @@ package ru.warfaric.techradar.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.warfaric.techradar.entity.TechnologyEntity;
 import ru.warfaric.techradar.entity.dto.TechnologyDto;
@@ -15,9 +16,9 @@ import java.util.stream.Collectors;
 @RestController
 public class TechnologyController {
 
-    private TechnologyService technologyService;
+    private final TechnologyService technologyService;
 
-    private Mapper<TechnologyEntity, TechnologyDto> technologyMapper;
+    private final Mapper<TechnologyEntity, TechnologyDto> technologyMapper;
 
     public TechnologyController(TechnologyService technologyService, Mapper<TechnologyEntity, TechnologyDto> technologyMapper) {
         this.technologyService = technologyService;
@@ -25,10 +26,16 @@ public class TechnologyController {
     }
 
     @PostMapping(path = "/api/technology")
-    public TechnologyDto addTechnology(@RequestBody TechnologyDto technology) {
-        TechnologyEntity technologyEntity = technologyMapper.mapFrom(technology);
-        TechnologyEntity savedTechnologyEntity = technologyService.save(technologyEntity);
-        return technologyMapper.mapTo(savedTechnologyEntity);
+    public ResponseEntity<String> addTechnology(@RequestBody TechnologyDto technology) {
+        try {
+            TechnologyEntity technologyEntity = technologyMapper.mapFrom(technology);
+            technologyService.save(technologyEntity);
+            return new ResponseEntity<>("id: " + technologyEntity.getId() + "\nТехнология успешно добавлена", HttpStatus.OK);
+        }catch (NullPointerException e) {
+            return new ResponseEntity<>("Некорректные параметры запроса. Проверьте правильность заполнения всех \n" +
+                    "обязательных полей: name, category, section, ring.", HttpStatus.BAD_REQUEST);
+        }
+
     }
 
     @GetMapping(path = "/api/technology")
@@ -62,23 +69,27 @@ public class TechnologyController {
     }
 
     @PatchMapping(path = "/api/technology/{id}")
-    public ResponseEntity<TechnologyDto> partialUpdateTechnology(
+    public ResponseEntity<String> partialUpdateTechnology(
                 @PathVariable("id") Long id,
                 @RequestBody TechnologyDto technologyDto
     ) {
         if(!technologyService.isExists(id)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("The technology with the specified ID does not exist.",HttpStatus.NOT_FOUND);
         }
 
         TechnologyEntity technologyEntity = technologyMapper.mapFrom(technologyDto);
-        TechnologyEntity updatedTechnology = technologyService.partialUpdate(id, technologyEntity);
-        return new ResponseEntity<>(technologyMapper.mapTo(updatedTechnology), HttpStatus.OK);
+        technologyService.partialUpdate(id, technologyEntity);
+        return new ResponseEntity<>("Технология успешно обновлена", HttpStatus.OK);
     }
 
     @DeleteMapping(path = "/api/technology/{id}")
-    public ResponseEntity deleteTechnology(@PathVariable("id") Long id) {
-        technologyService.delete(id);
-        return new ResponseEntity(HttpStatus.OK);
+    public ResponseEntity<String> deleteTechnology(@PathVariable("id") Long id) {
+        try {
+            technologyService.delete(id);
+            return new ResponseEntity<>("Технология успешно удалена", HttpStatus.OK);
+        }catch (RuntimeException e) {
+            return new ResponseEntity<>("The technology with the specified ID does not exist.", HttpStatus.NOT_FOUND);
+        }
     }
 
 }
